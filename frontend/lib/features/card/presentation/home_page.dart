@@ -9,6 +9,8 @@ import '../../auth/presentation/login_page.dart';
 import '../../match/data/match_repository.dart';
 import '../domain/heart_card.dart';
 import '../data/card_repository.dart';
+import '../../mood/presentation/mood_selector.dart';
+import '../../mood/presentation/mood_viewmodel.dart';
 
 /// 首页 — 场景入口
 ///
@@ -34,6 +36,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadActiveCard();
       _startPolling();
+      ref.read(moodViewModelProvider.notifier).loadMood();
     });
   }
 
@@ -126,6 +129,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 '附近 $_onlineCount 人在线',
                 style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 24),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: MoodSelector(),
               ),
               const SizedBox(height: 48),
 
