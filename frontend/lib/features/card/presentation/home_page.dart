@@ -138,6 +138,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: const Text('回眸'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.radar),
+            tooltip: '附近',
+            onPressed: () => context.push(AppRouter.nearby),
+          ),
+          IconButton(
             icon: const Icon(Icons.auto_stories_outlined),
             tooltip: '回眸故事',
             onPressed: () => context.push(AppRouter.story),

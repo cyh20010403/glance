@@ -10,6 +10,7 @@ import '../features/profile/presentation/my_look_page.dart';
 import '../features/story/presentation/story_page.dart';
 import '../features/ceremony/domain/ceremony_data.dart';
 import '../features/ceremony/presentation/match_ceremony_page.dart';
+import '../features/nearby/presentation/nearby_page.dart';
 
 /// GoRouter 路由配置
 ///
@@ -27,6 +28,7 @@ final class AppRouter {
   static const String myLook = '/my-look';
   static const String story = '/story';
   static const String ceremony = '/ceremony/:matchId';
+  static const String nearby = '/nearby';
 
   // === 路由实例 ===
   static final GoRouter router = GoRouter(
@@ -98,6 +100,14 @@ final class AppRouter {
           final data = state.extra as CeremonyData;
           return _fadePage(child: MatchCeremonyPage(data: data));
         },
+      ),
+      // 附近
+      GoRoute(
+        path: nearby,
+        name: 'nearby',
+        pageBuilder: (context, state) => _fadePage(
+          child: const NearbyPage(),
+        ),
       ),
       GoRoute(
         path: profileEdit,
