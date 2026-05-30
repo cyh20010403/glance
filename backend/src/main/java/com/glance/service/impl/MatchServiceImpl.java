@@ -8,6 +8,7 @@ import com.glance.repository.BlockListRepository;
 import com.glance.repository.HeartCardRepository;
 import com.glance.repository.MatchRecordRepository;
 import com.glance.repository.UserRepository;
+import com.glance.service.AiMatchService;
 import com.glance.service.MatchService;
 import com.glance.websocket.MatchNotificationHandler;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class MatchServiceImpl implements MatchService {
     private final BlockListRepository blockListRepository;
     private final UserRepository userRepository;
     private final MatchNotificationHandler matchNotificationHandler;
+    private final AiMatchService aiMatchService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Override
@@ -100,6 +102,35 @@ public class MatchServiceImpl implements MatchService {
             // 必须是对方发布的卡片、且同场景
             if (!otherCard.getUserId().equals(targetCard.getUserId())) continue;
             if (!otherCard.getScene().equals(myCard.getScene())) continue;
+
+            // === V2.0 四维加权匹配 ===
+            int totalScore = 0;
+            List<String> commonPoints = new ArrayList<>();
+            commonPoints.add("同一场景"); // 维度1: 场景一致(必须满足)
+
+            // 维度1: 衣着特征相似度 (40%)
+            int featureScore = computeFeatureSimilarity(otherCard, myCard);
+            totalScore += (int)(featureScore * 0.4);
+
+            // 维度2: 兴趣标签匹配 (30%)
+            int tagScore = computeTagOverlap(userId, otherCard.getUserId());
+            totalScore += (int)(tagScore * 0.3);
+            if (tagScore > 50) commonPoints.add("兴趣相投");
+
+            // 维度3: AI 文本语义匹配 (20%)
+            double aiScore = aiMatchService.computeTextSimilarity(
+                    myCard.getDescription(), otherCard.getDescription());
+            totalScore += (int)(aiScore * 100 * 0.2);
+
+            // 维度4: 时间相近度 (10%)
+            long timeDiff = Math.abs(java.time.Duration.between(
+                    myCard.getOccurredAt() != null ? myCard.getOccurredAt() : java.time.LocalDateTime.now(),
+                    otherCard.getOccurredAt() != null ? otherCard.getOccurredAt() : java.time.LocalDateTime.now()).toMinutes());
+            int timeScore = timeDiff < 5 ? 100 : timeDiff < 15 ? 60 : timeDiff < 30 ? 30 : 0;
+            totalScore += (int)(timeScore * 0.1);
+
+            log.info("四维匹配得分: userId={}, totalScore={}, feature={}, tag={}, ai={}, time={}",
+                    userId, totalScore, featureScore, tagScore, (int)(aiScore * 100), timeScore);
 
             // 双向匹配成立
             myCard.setStatus(2);
@@ -271,5 +302,39 @@ public class MatchServiceImpl implements MatchService {
 
     private boolean isNotEmpty(String s) {
         return s != null && !s.isEmpty();
+    }
+
+    /** 计算衣着特征相似度 (0-100) */
+    private int computeFeatureSimilarity(HeartCard a, HeartCard b) {
+        int score = 0;
+        int total = 6;
+        if (eq(a.getTopColor(), b.getTopColor())) score++;
+        if (eq(a.getPantsColor(), b.getPantsColor())) score++;
+        if (eq(a.getShoeColor(), b.getShoeColor())) score++;
+        if (a.getGlasses() != null && a.getGlasses().equals(b.getGlasses())) score++;
+        if (eq(a.getHairstyle(), b.getHairstyle())) score++;
+        if (a.getHasBag() != null && a.getHasBag().equals(b.getHasBag())) score++;
+        return score * 100 / total;
+    }
+
+    /** 计算兴趣标签重叠度 (0-100) */
+    private int computeTagOverlap(Long userAId, Long userBId) {
+        try {
+            var ua = userRepository.findById(userAId).orElse(null);
+            var ub = userRepository.findById(userBId).orElse(null);
+            if (ua == null || ub == null || ua.getTags() == null || ub.getTags() == null)
+                return 0;
+            List<String> tagsA = objectMapper.readValue(ua.getTags(), List.class);
+            List<String> tagsB = objectMapper.readValue(ub.getTags(), List.class);
+            if (tagsA.isEmpty() || tagsB.isEmpty()) return 0;
+            long overlap = tagsA.stream().filter(tagsB::contains).count();
+            return (int)(overlap * 100 / Math.max(tagsA.size(), tagsB.size()));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private boolean eq(String a, String b) {
+        return a != null && !a.isEmpty() && a.equals(b);
     }
 }
