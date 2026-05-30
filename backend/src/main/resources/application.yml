@@ -32,3 +32,8 @@ jwt:
 glance:
   card:
     expire-minutes: 30
+  ai:
+    api-url: https://api.deepseek.com/v1/chat/completions
+    api-key:
+    model: deepseek-chat
+    enabled: false
