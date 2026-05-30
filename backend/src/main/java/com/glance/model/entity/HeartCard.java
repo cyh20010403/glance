@@ -62,6 +62,14 @@ public class HeartCard {
     @Builder.Default
     private String description = "";
 
+    @Column(name = "image_url", length = 500)
+    @Builder.Default
+    private String imageUrl = "";
+
+    @Column(name = "match_score")
+    @Builder.Default
+    private java.math.BigDecimal matchScore = java.math.BigDecimal.ZERO;
+
     @Column(nullable = false)
     @Builder.Default
     private Integer status = 1; // 1-有效 2-已匹配 3-已过期

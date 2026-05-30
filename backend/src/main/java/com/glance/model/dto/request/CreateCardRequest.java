@@ -22,4 +22,5 @@ public class CreateCardRequest {
     private Integer hasBag;
     private String shoeColor;
     private String description;
+    private String imageUrl;
 }

@@ -30,6 +30,7 @@ jwt:
 
 # 心动卡片过期时间
 glance:
+  upload-dir: uploads
   card:
     expire-minutes: 30
   ai:
