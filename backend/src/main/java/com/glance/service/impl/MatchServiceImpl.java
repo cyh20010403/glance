@@ -3,9 +3,11 @@ package com.glance.service.impl;
 import com.glance.model.dto.ApiResponse;
 import com.glance.model.entity.HeartCard;
 import com.glance.model.entity.MatchRecord;
+import com.glance.model.entity.User;
 import com.glance.repository.BlockListRepository;
 import com.glance.repository.HeartCardRepository;
 import com.glance.repository.MatchRecordRepository;
+import com.glance.repository.UserRepository;
 import com.glance.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ public class MatchServiceImpl implements MatchService {
     private final HeartCardRepository heartCardRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final BlockListRepository blockListRepository;
+    private final UserRepository userRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Override
     @Transactional(readOnly = true)
@@ -107,6 +111,80 @@ public class MatchServiceImpl implements MatchService {
                     .userAId(userId)
                     .userBId(otherCard.getUserId())
                     .build();
+
+            // 计算共同点和缘分百分比
+            List<String> commonPointsList = new ArrayList<>();
+            int totalAttrs = 0;
+            int matchedAttrs = 0;
+
+            // 场景
+            totalAttrs++;
+            if (myCard.getScene() != null && !myCard.getScene().isEmpty()
+                    && myCard.getScene().equals(otherCard.getScene())) {
+                commonPointsList.add("同在" + getSceneLabel(myCard.getScene()));
+                matchedAttrs++;
+            }
+
+            // 上装颜色
+            totalAttrs++;
+            if (isNotEmpty(myCard.getTopColor()) && myCard.getTopColor().equals(otherCard.getTopColor())) {
+                commonPointsList.add("相似的衣着颜色");
+                matchedAttrs++;
+            }
+
+            // 裤装颜色
+            totalAttrs++;
+            if (isNotEmpty(myCard.getPantsColor()) && myCard.getPantsColor().equals(otherCard.getPantsColor())) {
+                commonPointsList.add("相似的裤装");
+                matchedAttrs++;
+            }
+
+            // 发型
+            totalAttrs++;
+            if (isNotEmpty(myCard.getHairstyle()) && myCard.getHairstyle().equals(otherCard.getHairstyle())) {
+                commonPointsList.add("相似的发型");
+                matchedAttrs++;
+            }
+
+            // 眼镜
+            totalAttrs++;
+            if (myCard.getGlasses() != null && myCard.getGlasses() > 0
+                    && myCard.getGlasses().equals(otherCard.getGlasses())) {
+                commonPointsList.add(myCard.getGlasses() == 1 ? "都戴眼镜" : "都不戴眼镜");
+                matchedAttrs++;
+            }
+
+            // 背包
+            totalAttrs++;
+            if (myCard.getHasBag() != null && myCard.getHasBag() > 0
+                    && myCard.getHasBag().equals(otherCard.getHasBag())) {
+                commonPointsList.add(myCard.getHasBag() == 1 ? "都背包" : "都不背包");
+                matchedAttrs++;
+            }
+
+            // 鞋子颜色
+            totalAttrs++;
+            if (isNotEmpty(myCard.getShoeColor()) && myCard.getShoeColor().equals(otherCard.getShoeColor())) {
+                commonPointsList.add("相似的鞋色");
+                matchedAttrs++;
+            }
+
+            // 确保至少有一个共同点
+            if (commonPointsList.isEmpty()) {
+                commonPointsList.add("在" + getSceneLabel(myCard.getScene()) + "相遇");
+            }
+
+            int score = totalAttrs > 0
+                    ? Math.max(60, (int) Math.round((double) matchedAttrs / totalAttrs * 100))
+                    : 80;
+
+            try {
+                match.setCommonPoints(objectMapper.writeValueAsString(commonPointsList));
+            } catch (Exception e) {
+                log.warn("Failed to serialize common points", e);
+            }
+            match.setScorePercent(score);
+
             matchRecordRepository.save(match);
 
             log.info("匹配成功: matchId={}, userA={}, userB={}", match.getId(), userId, otherCard.getUserId());
@@ -133,5 +211,59 @@ public class MatchServiceImpl implements MatchService {
         match.setStatus(2);
         matchRecordRepository.save(match);
         return ApiResponse.ok("已解除匹配", null);
+    }
+
+    @Override
+    public ApiResponse<?> getCeremonyDetail(Long userId, Long matchId) {
+        MatchRecord match = matchRecordRepository.findById(matchId).orElse(null);
+        if (match == null) return ApiResponse.error("匹配记录不存在");
+        if (!match.getUserAId().equals(userId) && !match.getUserBId().equals(userId)) {
+            return ApiResponse.error("无权查看");
+        }
+
+        Long partnerId = match.getUserAId().equals(userId)
+                ? match.getUserBId() : match.getUserAId();
+        User partner = userRepository.findById(partnerId).orElse(null);
+
+        // 共同点计算
+        List<String> commonPoints = new ArrayList<>();
+        if (match.getCommonPoints() != null && !match.getCommonPoints().isEmpty()) {
+            try {
+                commonPoints = objectMapper.readValue(match.getCommonPoints(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+            } catch (Exception ignored) {}
+        }
+
+        // 破冰提示
+        String icebreaker = "你们都在这里相遇了……聊聊今天的心情吧";
+        HeartCard card = heartCardRepository.findById(
+                match.getUserAId().equals(userId) ? match.getCardBId() : match.getCardAId()
+        ).orElse(null);
+        if (card != null) {
+            icebreaker = "你们都在" + getSceneLabel(card.getScene())
+                    + "里邂逅……聊聊今天的" + getSceneLabel(card.getScene()) + "体验？";
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("matchId", matchId);
+        result.put("commonPoints", commonPoints);
+        result.put("scorePercent", match.getScorePercent() != null ? match.getScorePercent() : 80);
+        result.put("icebreaker", icebreaker);
+        result.put("partnerNickname", partner != null ? partner.getNickname() : "");
+        result.put("partnerMood", "");
+
+        return ApiResponse.ok(result);
+    }
+
+    private String getSceneLabel(String scene) {
+        return switch (scene) {
+            case "subway" -> "地铁"; case "library" -> "图书馆";
+            case "cafe" -> "咖啡店"; case "campus" -> "校园";
+            default -> "城市某处";
+        };
+    }
+
+    private boolean isNotEmpty(String s) {
+        return s != null && !s.isEmpty();
     }
 }

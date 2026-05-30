@@ -15,4 +15,7 @@ public interface MatchService {
 
     /** 解除匹配 */
     ApiResponse<?> unmatch(Long userId, Long matchId);
+
+    /** 获取匹配仪式详情（共同点/缘分百分比/破冰提示） */
+    ApiResponse<?> getCeremonyDetail(Long userId, Long matchId);
 }

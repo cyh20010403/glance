@@ -39,4 +39,10 @@ public class MatchController {
         Long userId = (Long) auth.getPrincipal();
         return matchService.unmatch(userId, matchId);
     }
+
+    @GetMapping("/{matchId}/detail")
+    public ApiResponse<?> getCeremonyDetail(Authentication auth, @PathVariable Long matchId) {
+        Long userId = (Long) auth.getPrincipal();
+        return matchService.getCeremonyDetail(userId, matchId);
+    }
 }
