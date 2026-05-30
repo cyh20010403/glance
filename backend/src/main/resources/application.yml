@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: glance
+  datasource:
+    url: jdbc:mysql://localhost:3307/glance?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: glance
+    password: glance123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+
+server:
+  port: 8080
+
+# JWT 配置
+jwt:
+  secret: glance-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration: 604800000  # 7天(ms)
+
+# 心动卡片过期时间
+glance:
+  card:
+    expire-minutes: 30
