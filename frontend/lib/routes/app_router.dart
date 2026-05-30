@@ -7,6 +7,7 @@ import '../features/match/presentation/match_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/profile/presentation/profile_edit_page.dart';
 import '../features/profile/presentation/my_look_page.dart';
+import '../features/story/presentation/story_page.dart';
 
 /// GoRouter 路由配置
 ///
@@ -22,6 +23,7 @@ final class AppRouter {
   static const String profile = '/profile';
   static const String profileEdit = '/profile/edit';
   static const String myLook = '/my-look';
+  static const String story = '/story';
 
   // === 路由实例 ===
   static final GoRouter router = GoRouter(
@@ -77,6 +79,13 @@ final class AppRouter {
         name: 'myLook',
         pageBuilder: (context, state) => _fadePage(
           child: const MyLookPage(),
+        ),
+      ),
+      GoRoute(
+        path: story,
+        name: 'story',
+        pageBuilder: (context, state) => _fadePage(
+          child: const StoryPage(),
         ),
       ),
       GoRoute(

@@ -102,6 +102,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: const Text('回眸'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.auto_stories_outlined),
+            tooltip: '回眸故事',
+            onPressed: () => context.push(AppRouter.story),
+          ),
+          IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () => context.push(AppRouter.profile),
           ),
