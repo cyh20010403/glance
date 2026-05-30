@@ -33,6 +33,13 @@ public class MatchRecord {
     @Builder.Default
     private Integer status = 1; // 1-已匹配 2-已解除
 
+    @Column(name = "common_points", columnDefinition = "JSON")
+    private String commonPoints; // JSON 数组字符串: ["同校","都喜欢咖啡"]
+
+    @Column(name = "score_percent")
+    @Builder.Default
+    private Integer scorePercent = 0;
+
     @Column(name = "matched_at", nullable = false, updatable = false)
     private LocalDateTime matchedAt;
 
