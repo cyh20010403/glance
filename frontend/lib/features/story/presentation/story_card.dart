@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
 import '../domain/glance_story.dart';
 
-/// 回眸故事卡片 — 可配合 RepaintBoundary 做截图分享
+/// 回眸故事卡片 —「手帖日记」风格
+///
+/// 暖白纸底 + 靛蓝文字，像一页私人手记。
 final class StoryCard extends StatelessWidget {
   final GlanceStory story;
   const StoryCard({super.key, required this.story});
@@ -11,34 +14,60 @@ final class StoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF8F0FF), Color(0xFFFFF5F5)],
-        ),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        border: Border.all(color: AppTheme.border, width: 0.5),
         boxShadow: AppTheme.shadowMd,
       ),
       child: Column(
         children: [
-          const Text('📖', style: TextStyle(fontSize: 32)),
-          const SizedBox(height: 12),
-          const Text('今日回眸',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary)),
-          const SizedBox(height: 4),
-          Text(story.storyDate,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-          const SizedBox(height: 20),
-          Text(story.content,
-              style: const TextStyle(fontSize: 15, height: 1.8,
-                  color: AppTheme.textPrimary),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          const Text('—— 来自《回眸》',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          // 日期标签
+          Text(
+            story.storyDate,
+            style: GoogleFonts.notoSerifSc(
+              fontSize: 13, color: AppTheme.textSecondary,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing3xl),
+
+          // 故事正文
+          Text(
+            story.content,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.notoSerifSc(
+              fontSize: 15, height: 2.0,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+
+          const SizedBox(height: AppTheme.spacing3xl),
+
+          // 底部品牌线
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 24, height: 0.5,
+                color: AppTheme.textHint,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '回眸',
+                style: GoogleFonts.notoSerifSc(
+                  fontSize: 12, color: AppTheme.textHint,
+                  letterSpacing: 3,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 24, height: 0.5,
+                color: AppTheme.textHint,
+              ),
+            ],
+          ),
         ],
       ),
     );
