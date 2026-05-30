@@ -8,6 +8,8 @@ part of 'heart_card.dart';
 
 _$HeartCardImpl _$$HeartCardImplFromJson(Map<String, dynamic> json) =>
     _$HeartCardImpl(
+      imageUrl: json['imageUrl'] as String? ?? '',
+      matchScore: (json['matchScore'] as num?)?.toDouble() ?? 0.0,
       id: (json['id'] as num).toInt(),
       userId: (json['userId'] as num).toInt(),
       scene: json['scene'] as String,
@@ -28,6 +30,8 @@ _$HeartCardImpl _$$HeartCardImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$HeartCardImplToJson(_$HeartCardImpl instance) =>
     <String, dynamic>{
+      'imageUrl': instance.imageUrl,
+      'matchScore': instance.matchScore,
       'id': instance.id,
       'userId': instance.userId,
       'scene': instance.scene,

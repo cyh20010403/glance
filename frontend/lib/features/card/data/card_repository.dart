@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
 import '../domain/heart_card.dart';
 
@@ -22,6 +24,15 @@ final class CardRepository {
     return list
         .map((j) => HeartCard.fromJson(j as Map<String, dynamic>))
         .toList();
+  }
+
+  /// 上传场景照片
+  Future<Map<String, dynamic>?> uploadImage(File file) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path),
+    });
+    final resp = await _dio.post('/v1/files/upload', data: formData);
+    return resp.data['data'];
   }
 
   /// 创建心动卡片

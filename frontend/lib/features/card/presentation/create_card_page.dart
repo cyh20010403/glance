@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../routes/app_router.dart';
@@ -20,6 +22,7 @@ final class CreateCardPage extends ConsumerStatefulWidget {
 }
 
 class _CreateCardPageState extends ConsumerState<CreateCardPage> {
+  File? _imageFile;
   String _scene = 'campus';
   String _topColor = '';
   String _pantsColor = '';
@@ -47,6 +50,18 @@ class _CreateCardPageState extends ConsumerState<CreateCardPage> {
     _descController.dispose();
     _pollTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+    if (picked != null) {
+      setState(() => _imageFile = File(picked.path));
+    }
   }
 
   Future<void> _submit() async {
@@ -129,6 +144,34 @@ class _CreateCardPageState extends ConsumerState<CreateCardPage> {
             _toggle('🎒 背包', _hasBag, (v) => setState(() => _hasBag = v)),
           ]),
           const SizedBox(height: AppTheme.spacing3xl),
+
+          GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              width: double.infinity,
+              height: 180,
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                border: Border.all(color: AppTheme.border, width: 1),
+              ),
+              child: _imageFile != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      child: Image.file(_imageFile!, fit: BoxFit.cover),
+                    )
+                  : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(Icons.add_photo_alternate_outlined,
+                          size: 40, color: AppTheme.textSecondary),
+                      SizedBox(height: 8),
+                      Text('添加场景照片（可选）',
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                      Text('非自拍 · 仅作氛围参考',
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                    ]),
+            ),
+          ),
+          SizedBox(height: 16),
 
           _sectionTitle('💭 想对 TA 说点什么'),
           const SizedBox(height: AppTheme.spacingMd),

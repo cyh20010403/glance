@@ -20,6 +20,8 @@ HeartCard _$HeartCardFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$HeartCard {
+  String get imageUrl => throw _privateConstructorUsedError;
+  double get matchScore => throw _privateConstructorUsedError;
   int get id => throw _privateConstructorUsedError;
   int get userId => throw _privateConstructorUsedError;
   String get scene => throw _privateConstructorUsedError;
@@ -53,7 +55,9 @@ abstract class $HeartCardCopyWith<$Res> {
       _$HeartCardCopyWithImpl<$Res, HeartCard>;
   @useResult
   $Res call(
-      {int id,
+      {String imageUrl,
+      double matchScore,
+      int id,
       int userId,
       String scene,
       String sceneLabel,
@@ -86,6 +90,8 @@ class _$HeartCardCopyWithImpl<$Res, $Val extends HeartCard>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? imageUrl = null,
+    Object? matchScore = null,
     Object? id = null,
     Object? userId = null,
     Object? scene = null,
@@ -104,6 +110,14 @@ class _$HeartCardCopyWithImpl<$Res, $Val extends HeartCard>
     Object? createdAt = null,
   }) {
     return _then(_value.copyWith(
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      matchScore: null == matchScore
+          ? _value.matchScore
+          : matchScore // ignore: cast_nullable_to_non_nullable
+              as double,
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -181,7 +195,9 @@ abstract class _$$HeartCardImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int id,
+      {String imageUrl,
+      double matchScore,
+      int id,
       int userId,
       String scene,
       String sceneLabel,
@@ -212,6 +228,8 @@ class __$$HeartCardImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? imageUrl = null,
+    Object? matchScore = null,
     Object? id = null,
     Object? userId = null,
     Object? scene = null,
@@ -230,6 +248,14 @@ class __$$HeartCardImplCopyWithImpl<$Res>
     Object? createdAt = null,
   }) {
     return _then(_$HeartCardImpl(
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      matchScore: null == matchScore
+          ? _value.matchScore
+          : matchScore // ignore: cast_nullable_to_non_nullable
+              as double,
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -302,7 +328,9 @@ class __$$HeartCardImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$HeartCardImpl extends _HeartCard {
   const _$HeartCardImpl(
-      {required this.id,
+      {this.imageUrl = '',
+      this.matchScore = 0.0,
+      required this.id,
       required this.userId,
       required this.scene,
       this.sceneLabel = '',
@@ -323,6 +351,12 @@ class _$HeartCardImpl extends _HeartCard {
   factory _$HeartCardImpl.fromJson(Map<String, dynamic> json) =>
       _$$HeartCardImplFromJson(json);
 
+  @override
+  @JsonKey()
+  final String imageUrl;
+  @override
+  @JsonKey()
+  final double matchScore;
   @override
   final int id;
   @override
@@ -371,7 +405,7 @@ class _$HeartCardImpl extends _HeartCard {
 
   @override
   String toString() {
-    return 'HeartCard(id: $id, userId: $userId, scene: $scene, sceneLabel: $sceneLabel, location: $location, occurredAt: $occurredAt, topColor: $topColor, pantsColor: $pantsColor, glasses: $glasses, hairstyle: $hairstyle, hasBag: $hasBag, shoeColor: $shoeColor, description: $description, status: $status, expireAt: $expireAt, createdAt: $createdAt)';
+    return 'HeartCard(imageUrl: $imageUrl, matchScore: $matchScore, id: $id, userId: $userId, scene: $scene, sceneLabel: $sceneLabel, location: $location, occurredAt: $occurredAt, topColor: $topColor, pantsColor: $pantsColor, glasses: $glasses, hairstyle: $hairstyle, hasBag: $hasBag, shoeColor: $shoeColor, description: $description, status: $status, expireAt: $expireAt, createdAt: $createdAt)';
   }
 
   @override
@@ -379,6 +413,10 @@ class _$HeartCardImpl extends _HeartCard {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$HeartCardImpl &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.matchScore, matchScore) ||
+                other.matchScore == matchScore) &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.scene, scene) || other.scene == scene) &&
@@ -411,6 +449,8 @@ class _$HeartCardImpl extends _HeartCard {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      imageUrl,
+      matchScore,
       id,
       userId,
       scene,
@@ -446,7 +486,9 @@ class _$HeartCardImpl extends _HeartCard {
 
 abstract class _HeartCard extends HeartCard {
   const factory _HeartCard(
-      {required final int id,
+      {final String imageUrl,
+      final double matchScore,
+      required final int id,
       required final int userId,
       required final String scene,
       final String sceneLabel,
@@ -467,6 +509,10 @@ abstract class _HeartCard extends HeartCard {
   factory _HeartCard.fromJson(Map<String, dynamic> json) =
       _$HeartCardImpl.fromJson;
 
+  @override
+  String get imageUrl;
+  @override
+  double get matchScore;
   @override
   int get id;
   @override

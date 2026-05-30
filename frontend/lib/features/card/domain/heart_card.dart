@@ -7,6 +7,8 @@ part 'heart_card.g.dart';
 @freezed
 sealed class HeartCard with _$HeartCard {
   const factory HeartCard({
+    @Default('') String imageUrl,
+    @Default(0.0) double matchScore,
     required int id,
     required int userId,
     required String scene,
