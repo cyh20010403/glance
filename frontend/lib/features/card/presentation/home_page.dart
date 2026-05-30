@@ -12,6 +12,8 @@ import '../data/card_repository.dart';
 import '../../mood/presentation/mood_selector.dart';
 import '../../mood/presentation/mood_viewmodel.dart';
 import '../../../features/ceremony/domain/ceremony_data.dart';
+import '../../match/data/match_notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// 首页 — 场景入口
 ///
@@ -30,13 +32,15 @@ class _HomePageState extends ConsumerState<HomePage> {
   Timer? _pollTimer;
   HeartCard? _activeCard;
   int _onlineCount = 0;
+  final _notificationService = MatchNotificationService();
+  StreamSubscription? _wsSub;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadActiveCard();
-      _startPolling();
+      _loadUserIdAndConnect();
       ref.read(moodViewModelProvider.notifier).loadMood();
     });
   }
@@ -44,6 +48,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _wsSub?.cancel();
+    _notificationService.disconnect();
     super.dispose();
   }
 
@@ -85,6 +91,27 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
       }
     });
+  }
+
+  Future<void> _loadUserIdAndConnect() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+    if (userId != null) {
+      _notificationService.connect(userId);
+      _wsSub = _notificationService.notifications.listen((data) {
+        if (!mounted) return;
+        final matchId = data['matchId'] as int;
+        // 获取仪式详情
+        _matchRepo.getCeremonyDetail(matchId).then((detail) {
+          if (detail != null && mounted) {
+            context.push(
+              AppRouter.ceremony.replaceFirst(':matchId', matchId.toString()),
+              extra: CeremonyData.fromJson(detail),
+            );
+          }
+        });
+      });
+    }
   }
 
   @override
