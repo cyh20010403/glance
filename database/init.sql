@@ -117,3 +117,55 @@ CREATE TABLE IF NOT EXISTS `block_list` (
     UNIQUE KEY `uk_user_blocked` (`user_id`, `blocked_id`),
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='拉黑记录表';
+
+-- ============================================
+-- V2.0 新增：情绪状态表
+-- ============================================
+CREATE TABLE IF NOT EXISTS `mood_status` (
+    `id`         BIGINT   NOT NULL AUTO_INCREMENT COMMENT '情绪记录ID',
+    `user_id`    BIGINT   NOT NULL COMMENT '用户ID',
+    `mood`       VARCHAR(20) NOT NULL COMMENT '情绪类型: expect/miss/happy/quiet/bored',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='情绪状态表';
+
+-- ============================================
+-- V2.0 新增：回眸故事表
+-- ============================================
+CREATE TABLE IF NOT EXISTS `glance_story` (
+    `id`         BIGINT   NOT NULL AUTO_INCREMENT COMMENT '故事ID',
+    `user_id`    BIGINT   NOT NULL COMMENT '用户ID',
+    `content`    TEXT     NOT NULL COMMENT '故事文本内容',
+    `story_date` DATE     NOT NULL COMMENT '故事日期',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_date` (`user_id`, `story_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回眸故事表';
+
+-- ============================================
+-- V2.0 新增：兴趣标签字典表
+-- ============================================
+CREATE TABLE IF NOT EXISTS `interest_tag` (
+    `id`         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '标签ID',
+    `name`       VARCHAR(20) NOT NULL COMMENT '标签名',
+    `emoji`      VARCHAR(5)  NOT NULL DEFAULT '' COMMENT '图标',
+    `category`   VARCHAR(20) NOT NULL DEFAULT '' COMMENT '分类',
+    `sort_order` INT         NOT NULL DEFAULT 0 COMMENT '排序',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='兴趣标签字典表';
+
+-- ============================================
+-- V2.0 变更：heart_card 加图片和匹配分
+-- ============================================
+ALTER TABLE `heart_card`
+    ADD COLUMN IF NOT EXISTS `image_url`   VARCHAR(500)   DEFAULT '' COMMENT '场景照片URL',
+    ADD COLUMN IF NOT EXISTS `match_score` DECIMAL(5,2)   DEFAULT 0  COMMENT 'AI综合匹配得分';
+
+-- ============================================
+-- V2.0 变更：match_record 加共同点和缘分百分比
+-- ============================================
+ALTER TABLE `match_record`
+    ADD COLUMN IF NOT EXISTS `common_points` JSON  NULL COMMENT '共同点列表',
+    ADD COLUMN IF NOT EXISTS `score_percent`  INT  DEFAULT 0 COMMENT '缘分百分比(0-100)';
