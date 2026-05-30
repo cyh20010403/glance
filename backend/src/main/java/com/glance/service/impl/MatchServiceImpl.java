@@ -9,6 +9,7 @@ import com.glance.repository.HeartCardRepository;
 import com.glance.repository.MatchRecordRepository;
 import com.glance.repository.UserRepository;
 import com.glance.service.MatchService;
+import com.glance.websocket.MatchNotificationHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRecordRepository matchRecordRepository;
     private final BlockListRepository blockListRepository;
     private final UserRepository userRepository;
+    private final MatchNotificationHandler matchNotificationHandler;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Override
@@ -186,6 +188,10 @@ public class MatchServiceImpl implements MatchService {
             match.setScorePercent(score);
 
             matchRecordRepository.save(match);
+
+            // WebSocket 推送匹配通知给双方
+            matchNotificationHandler.pushMatchNotification(userId, match.getId(), myCard.getId());
+            matchNotificationHandler.pushMatchNotification(otherCard.getUserId(), match.getId(), otherCard.getId());
 
             log.info("匹配成功: matchId={}, userA={}, userB={}", match.getId(), userId, otherCard.getUserId());
             return ApiResponse.ok("TA 也刚刚注意到了你。", match);
