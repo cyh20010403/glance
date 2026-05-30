@@ -17,8 +17,17 @@ public class NearbyController {
 
     private final MoodStatusRepository moodStatusRepository;
 
+    // 内存缓存：记录 BLE 扫描到的设备数（最近 5 分钟）
+    private final Map<String, LocalDateTime> blePings = new LinkedHashMap<>();
+
     @GetMapping("/stats")
     public ApiResponse<NearbyStatsResponse> getStats(Authentication auth) {
+        // 清理过期 BLE 记录
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(5);
+        blePings.entrySet().removeIf(e -> e.getValue().isBefore(cutoff));
+
+        int bleCount = blePings.size();
+
         LocalDateTime since = LocalDateTime.now().minusMinutes(30);
         List<Object[]> rows = moodStatusRepository.countMoodDistribution(since);
 
@@ -31,9 +40,21 @@ public class NearbyController {
             total += count;
         }
 
+        // 在线人数取 BLE 扫描数 和 活跃情绪数 的最大值
+        int onlineCount = Math.max(total, bleCount);
+
         return ApiResponse.ok(NearbyStatsResponse.builder()
-                .onlineCount(Math.max(total, 0))
+                .onlineCount(onlineCount)
                 .moodDistribution(distribution)
                 .build());
+    }
+
+    /** 移动端 BLE 扫描心跳上报 */
+    @PostMapping("/ble-ping")
+    public ApiResponse<?> blePing(Authentication auth, @RequestBody Map<String, String> body) {
+        String deviceId = body.getOrDefault("deviceId",
+                auth.getPrincipal().toString());
+        blePings.put(deviceId, LocalDateTime.now());
+        return ApiResponse.ok(Map.of("nearby", blePings.size()));
     }
 }

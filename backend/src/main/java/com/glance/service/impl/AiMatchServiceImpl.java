@@ -71,7 +71,60 @@ public class AiMatchServiceImpl implements AiMatchService {
 
     @Override
     public boolean isSelfie(String imageUrl) {
-        // V2.3 实现，当前返回 false
-        return false;
+        if (!aiConfig.isEnabled() || aiConfig.getApiKey().isEmpty()) {
+            log.debug("AI 未启用，跳过自拍检测");
+            return false;
+        }
+
+        try {
+            // 读取图片文件并 base64 编码
+            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads").toAbsolutePath().normalize();
+            java.nio.file.Path imagePath = uploadDir.resolve(filename);
+            if (!imagePath.toFile().exists()) {
+                log.warn("图片文件不存在: {}", filename);
+                return false;
+            }
+
+            byte[] imageBytes = java.nio.file.Files.readAllBytes(imagePath);
+            String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+
+            Map<String, Object> body = Map.of(
+                "model", aiConfig.getModel(),
+                "messages", List.of(
+                    Map.of("role", "system", "content",
+                        "你是一个图片内容审核工具。判断图片是否为自拍或人像照片。" +
+                        "自拍/人像照片的特征：以人物面部为主体，包含眼睛、鼻子、嘴巴等面部特征。" +
+                        "只回复 YES 或 NO。"),
+                    Map.of("role", "user", "content", List.of(
+                        Map.of("type", "text", "text", "这是自拍/人像照片吗？只回答 YES 或 NO。"),
+                        Map.of("type", "image_url", "data",
+                            "data:image/jpeg;base64," + base64Image)
+                    ))
+                ),
+                "temperature", 0.0,
+                "max_tokens", 5
+            );
+
+            String json = objectMapper.writeValueAsString(body);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(aiConfig.getApiUrl()))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + aiConfig.getApiKey())
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .timeout(Duration.ofSeconds(20))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            Map<String, Object> result = objectMapper.readValue(response.body(), Map.class);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) result.get("choices");
+            String content = (String) ((Map<String, Object>) choices.get(0).get("message")).get("content");
+            boolean isSelfie = content != null && content.trim().toUpperCase().contains("YES");
+            log.info("AI 自拍检测结果: {} -> {}", filename, isSelfie ? "是自拍(拦截)" : "非自拍(放行)");
+            return isSelfie;
+        } catch (Exception e) {
+            log.warn("AI 自拍检测失败（降级放行）: {}", e.getMessage());
+            return false; // 降级：放行
+        }
     }
 }
