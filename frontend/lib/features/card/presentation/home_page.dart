@@ -11,6 +11,7 @@ import '../domain/heart_card.dart';
 import '../data/card_repository.dart';
 import '../../mood/presentation/mood_selector.dart';
 import '../../mood/presentation/mood_viewmodel.dart';
+import '../../../features/ceremony/domain/ceremony_data.dart';
 
 /// 首页 — 场景入口
 ///
@@ -65,15 +66,23 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (result != null && mounted) {
         _pollTimer?.cancel();
         final match = result['match'];
-        final partnerCard = result['partnerCard'];
-        Future.delayed(const Duration(milliseconds: 500), () {
+        final matchId = match['id'] as int;
+        // 获取仪式详情
+        try {
+          final detailResp = await _matchRepo.getCeremonyDetail(matchId);
+          if (detailResp != null && mounted) {
+            context.push(AppRouter.ceremony.replaceFirst(':matchId', matchId.toString()),
+                extra: CeremonyData.fromJson(detailResp));
+          }
+        } catch (_) {
+          // 降级：仍用旧匹配页
           if (mounted) {
             context.push(AppRouter.match, extra: {
               'matchId': match['id'],
-              'partnerCard': partnerCard,
+              'partnerCard': result['partnerCard'],
             });
           }
-        });
+        }
       }
     });
   }

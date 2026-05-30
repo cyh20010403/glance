@@ -32,6 +32,15 @@ final class MatchRepository {
         .toList();
   }
 
+  /// 获取仪式详情
+  Future<Map<String, dynamic>?> getCeremonyDetail(int matchId) async {
+    final resp = await _dio.get('/matches/$matchId/detail');
+    if (resp.data['code'] == 200) {
+      return resp.data['data'];
+    }
+    return null;
+  }
+
   /// 解除匹配
   Future<void> unmatch(int matchId) async {
     await _dio.delete('/matches/$matchId');
